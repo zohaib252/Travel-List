@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./index.css";
 
 const initialItems = [
   { id: 1, description: "Passports", quantity: 2, packed: false },
@@ -7,12 +8,18 @@ const initialItems = [
 ];
 
 export default function App() {
+  const [items, setItems] = useState(initialItems); // State for the list
+
+  function addItem(newItem) {
+    setItems((prevItems) => [...prevItems, newItem]); // Add new item to the list
+  }
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <PackingList />
-      <Stats />
+      <Form onAddItem={addItem} />
+      <PackingList items={items} />
+      <Stats items={items} />
     </div>
   );
 }
@@ -21,21 +28,19 @@ function Logo() {
   return <h1>🌴Far Away👜</h1>;
 }
 
-function Form() {
+function Form({ onAddItem }) {
   const [description, setDescription] = useState("");
   const [quantity, setQunatity] = useState(1);
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (!description) return;
+
+    const newItem = { description, quantity, packed: false, id: Date.now() };
+    onAddItem(newItem); // Pass the new item to the parent
+    setDescription("");
+    setQunatity(1);
   }
-
-  if (!description) return;
-
-  const newItem = { description, quantity, packed: false, id: Date.now() };
-  console.log(newItem);
-
-  setDescription("");
-  setQunatity("1");
 
   return (
     <form className="add-form" onSubmit={handleSubmit}>
@@ -61,12 +66,12 @@ function Form() {
   );
 }
 
-function PackingList() {
+function PackingList({ items }) {
   return (
     <div className="list">
       <ul>
-        {initialItems.map((item) => (
-          <Item item={item} key={item} />
+        {items.map((item) => (
+          <Item item={item} key={item.id} />
         ))}
       </ul>
     </div>
@@ -84,10 +89,19 @@ function Item({ item }) {
   );
 }
 
-function Stats() {
+function Stats({ items }) {
+  const totalItems = items.length;
+  const packedItems = items.filter((item) => item.packed).length;
+  const packedPercentage = totalItems
+    ? Math.round((packedItems / totalItems) * 100)
+    : 0;
+
   return (
     <footer className="stats">
-      <em>You have X item in your list, and you already packed X(X%)</em>
+      <em>
+        You have {totalItems} item(s) in your list, and you already packed{" "}
+        {packedItems} ({packedPercentage}%)
+      </em>
     </footer>
   );
 }
